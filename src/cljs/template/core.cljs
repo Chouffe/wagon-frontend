@@ -77,7 +77,7 @@
 
 (defn search-box []
   [:div.row
-   [:div.col-lg-2
+   [:div.col-lg-12
     [:div.input-group
      [:input.form-control {:on-change (fn [e]
                                         (let [value (.-target.value e)]
