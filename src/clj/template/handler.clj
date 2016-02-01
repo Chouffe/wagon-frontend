@@ -10,8 +10,22 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults api-defaults]]
 
+            [clojure-csv.core :as csv]
+
             [cheshire.core :as json]
             [environ.core :refer [env]]))
+
+(def lazy-csv
+  (->> "resources/public/csv/input.csv"
+       slurp
+       csv/parse-csv))
+
+(defn get-csv-rows
+  ([n csv] (get-csv-rows 0 n csv))
+  ([offset n csv] (->> csv
+                       (drop (inc offset))
+                       (take n)
+                       (cons (first csv)))))
 
 (def mount-target
   [:div#app
@@ -27,7 +41,9 @@
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport"
              :content "width=device-width, initial-scale=1"}]
-     (include-css (if (env :dev) "css/site.css" "css/site.min.css"))]
+     (include-css (if (env :dev)
+                    "bower_components/bootstrap/dist/css/bootstrap.css"
+                    "bower_components/bootstrap/dist/css/bootstrap.min.css"))]
     [:body
      mount-target
      (include-js "js/app.js")]]))
@@ -43,7 +59,9 @@
   (wrap-middleware #'routes))
 
 (defroutes api-routes
-  (GET "/api/json" [] (response {:hello :world :bar :foo})))
+  (GET "/api/csv" [n offset]
+       ;; TODO: Add error handling when casting from str to int
+       (response (get-csv-rows (Integer. offset) (Integer. n) lazy-csv))))
 
 (defn wrap-api-middleware [handler]
   (-> handler
