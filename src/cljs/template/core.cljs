@@ -29,9 +29,11 @@
           (swap! app-state assoc-in [:csv :headers] headers)
           (swap! app-state update-in [:csv :rows] (fn [rows] (apply conj rows (remove (set rows) clean-rows))))))
 
+(def base-api "https://shielded-brushlands-80614.herokuapp.com/")
+
 ;; API call
 (defn load-chunk-csv! [n offset]
-  (go (when-let [{:keys [body]} (<! (http/get (str "http://localhost:3000/api/csv?n=" n "&offset=" offset)))]
+  (go (when-let [{:keys [body]} (<! (http/get (str  base-api "api/csv?n=" n "&offset=" offset)))]
         (add-csv! body)
         (swap! app-state update-in [:csv :n-loaded] + n)
         (swap! app-state assoc-in [:csv :offset] offset))))
